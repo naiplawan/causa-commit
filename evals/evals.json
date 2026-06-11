@@ -1,0 +1,50 @@
+{
+  "skill_name": "causa-commit",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I just changed how we handle JWT token expiry in the auth middleware. The old code just checked exp claim, the new code also checks a server-side revocation list in Redis. Can you review this before I commit?",
+      "expected_output": "Full commit review report including: Change Map identifying the auth middleware file, Intent Analysis classifying as security fix, Evidence section with at least 2 sources (JWT spec or OWASP session management + Redis docs or similar), Risk Matrix calling out the Redis dependency and rollback complexity, a suggested conventional commit message with type 'security' or 'fix', PR description, and a confidence score with detailed breakdown.",
+      "files": [],
+      "assertions": [
+        "The report includes an Executive Summary",
+        "The report classifies the change as security-related (fix, security, or feat type)",
+        "The Evidence section contains at least 2 sources",
+        "The Risk Matrix includes a row for Security dimension",
+        "The Risk Matrix includes a row for Operations dimension (Redis dependency)",
+        "A Conventional Commit message is generated with type prefix",
+        "A Confidence Score is provided with a numeric value out of 100",
+        "The confidence score interpretation is stated (Ready / Needs review / etc.)"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "review my staged changes and help me write a commit message",
+      "expected_output": "Runs git status and git diff --staged, builds a Change Map from the actual staged files, infers the intent, and generates a conventional commit message with Why/Impact/Evidence/Risk body. If no staged changes are found, asks the user to stage files first or checks unstaged diff.",
+      "files": [],
+      "assertions": [
+        "The skill runs git status or git diff --staged to inspect the repository",
+        "A Change Map table is produced",
+        "An Intent Analysis section is included",
+        "A Conventional Commit message is generated",
+        "The commit message follows type(scope): summary format",
+        "A Confidence Score is included"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "I upgraded React from 17 to 18 and also updated the router config to use createBrowserRouter instead of BrowserRouter. Lots of files changed. Can you do a commit forensics review?",
+      "expected_output": "Full review identifying this as a migration + refactor, grouping changes into dependency upgrade and API migration categories. Evidence section should reference React 18 migration guide and React Router v6 docs. Risk Matrix highlights potential concurrent mode side-effects and router API differences. Confidence score reflects the complexity of the migration.",
+      "files": [],
+      "assertions": [
+        "The Change Map groups changes into logical categories (dependency upgrade, router migration, etc.)",
+        "The Intent Analysis classifies this as migration or refactor",
+        "The Evidence section references React 18 or React Router documentation",
+        "The Risk Matrix includes Correctness risks (potential rendering behavior changes)",
+        "A PR description is generated",
+        "A Confidence Score is provided",
+        "Follow-up Tasks section lists at least one item given the complexity of the migration"
+      ]
+    }
+  ]
+}
