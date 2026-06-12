@@ -12,7 +12,7 @@ description: |
   "commit this" or "what did I change?" — run commit-forensics first.
 ---
 
-# Commit Forensics
+# Causa Commit
 
 You are a senior software engineer performing a pre-commit review.
 
@@ -38,6 +38,7 @@ Run these commands to understand the full picture:
 git status
 git diff --staged
 git diff
+git diff --patch
 git log --oneline -10
 ```
 
@@ -54,6 +55,65 @@ Rules:
 
 ---
 
+## Phase 1.5 — Hunk Evaluation (Split Detection)
+
+Analyze each **hunk** (logical block of changes) in the diff separately to determine if the commit should be split.
+
+### Step 1: Extract Hunks
+
+```bash
+git diff --patch
+```
+
+A hunk is a contiguous block of changes (lines starting with `@@`). Each hunk represents one logical change.
+
+### Step 2: Analyze Hunk Relationships
+
+For each hunk, determine:
+
+| Hunk | File | What Changed | Logical Group |
+|------|------|--------------|---------------|
+| 1 | auth/jwt.go | JWT validation logic | Security |
+| 2 | auth/logout.go | Token revocation | Security |
+| 3 | ui/button.tsx | Button styling | UI |
+| 4 | package.json | Dependencies | Dependencies |
+
+### Step 3: Grouping Logic
+
+**Group hunks together when:**
+- They affect the same feature/domain (e.g., all auth changes)
+- They share the same commit type (feat, fix, refactor)
+- They're described by a single "Why" statement
+
+**Suggest splitting when:**
+- Hunks affect unrelated features/domains
+- Different commit types are needed (e.g., one hunk is `fix`, another is `feat`)
+- A single commit message cannot describe all the changes without being vague
+- Different evidence sources are needed for different hunks
+
+### Step 4: Split Decision
+
+Evaluate the diff holistically and decide:
+
+```
+Commit Plan: [Single Commit | Split Required]
+
+If Split:
+  - Commit 1: [type(scope)]: [description]
+    Files: file1, file2
+    Why: [reason]
+  - Commit 2: [type(scope)]: [description]
+    Files: file3, file4
+    Why: [reason]
+
+If Single:
+  - The changes are all related to [single logical purpose]
+```
+
+**When in doubt, prefer splitting.** A commit that does one thing is easier to review, revert, and understand. Only combine changes when they're genuinely part of the same engineering decision.
+
+---
+
 ## Phase 2 — Intent Reconstruction
 
 Infer the actual engineering goal from the diff, not just the file names.
@@ -62,9 +122,9 @@ Classify into one primary type: `feat` `fix` `refactor` `perf` `security` `chore
 
 Then produce:
 
-**Expected Goal** — what the engineer was trying to accomplish  
-**Observed Implementation** — what the code actually does  
-**Alignment** — ✅ Strong / ⚠ Partial / ❌ Weak  
+**Expected Goal** — what the engineer was trying to accomplish
+**Observed Implementation** — what the code actually does
+**Alignment** — ✅ Strong / ⚠ Partial / ❌ Weak
 **Missing Intent** — anything the goal implies but the code doesn't address
 
 Do not assume. Explain your reasoning from what you actually see in the diff.
@@ -108,9 +168,9 @@ reduce the confidence score.
 
 Evaluate four risk dimensions:
 
-**Correctness** — edge cases, regressions, missing test coverage, rollback path  
-**Performance** — algorithmic complexity, memory allocation, render cost, extra network calls  
-**Security** — input validation, secrets exposure, permission checks, injection vectors  
+**Correctness** — edge cases, regressions, missing test coverage, rollback path
+**Performance** — algorithmic complexity, memory allocation, render cost, extra network calls
+**Security** — input validation, secrets exposure, permission checks, injection vectors
 **Operations** — migration safety, backward compatibility, deployment order dependency
 
 Format as a risk matrix:
@@ -125,7 +185,9 @@ Only list dimensions where a real risk exists. Omit rows where the change has no
 
 ## Phase 5 — Commit Generation
 
-Generate a Conventional Commit using this format:
+### If Split Required
+
+Generate a **separate** Conventional Commit for each logical group:
 
 ```
 type(scope): short imperative summary (max 72 chars)
@@ -136,9 +198,13 @@ Evidence: [1-line citation of the key source, or "internal refactor"]
 Risk: [Low / Medium / High — and why]
 ```
 
-Also generate:
+For each commit, also generate:
 - **PR Title** (under 70 chars)
 - **PR Description** using `templates/pr.md` as the structure
+
+### If Single Commit
+
+Generate one Conventional Commit using the format above, plus PR Title and PR Description.
 
 ---
 
@@ -176,6 +242,9 @@ Always produce the full report in this order:
 ## Change Map
 [table]
 
+## Hunk Analysis
+[per-hunk breakdown + split recommendation]
+
 ## Intent Analysis
 [Expected Goal / Observed Implementation / Alignment / Missing Intent]
 
@@ -185,11 +254,11 @@ Always produce the full report in this order:
 ## Risk Matrix
 [table]
 
-## Suggested Commit Message
-[conventional commit with body]
+## Suggested Commit Message(s)
+[One or more conventional commits with body — depends on split decision]
 
-## PR Description
-[using pr.md template]
+## PR Description(s)
+[using pr.md template — one per commit if split]
 
 ## Follow-up Tasks
 - [ ] item (if any gaps were found)

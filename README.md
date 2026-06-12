@@ -25,6 +25,14 @@ The report ends with a **Confidence Score (0–100)** that tells you whether it 
 
 ---
 
+## Installation
+
+```bash
+npx claude skill add https://github.com/rachaphol/causa-commit
+```
+
+---
+
 ## Usage
 
 ```bash
